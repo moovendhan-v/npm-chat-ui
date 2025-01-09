@@ -7,4 +7,7 @@ export const API_ENDPOINTS = {
       LIST: '/chats',
       MESSAGES: (chatId: string) => `/chats/${chatId}/messages`,
     },
+    CHANNELS: {
+      LIST: '/channels',
+    },
   } as const;

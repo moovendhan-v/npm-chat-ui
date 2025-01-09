@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Channel, DirectConversation, Message, User } from '@/types';
+import { channelService } from './api/services/channel.service';
 
 interface ChatState {
   channels: Channel[];
@@ -11,9 +12,9 @@ interface ChatState {
   updateUserStatus: (userId: string, status: User['status']) => void;
   setSelectedChannel: (channelId: string | null) => void;
   setSelectedConversation: (conversationId: string | null) => void;
+  fetchChannels: () => Promise<void>;
 }
 
-// Initial mock data
 const mockUsers: User[] = [
   {
     id: '1',
@@ -38,80 +39,24 @@ const mockUsers: User[] = [
   },
 ];
 
-const initialChannels: Channel[] = [
-  {
-    id: '1',
-    name: 'general',
-    description: 'General discussions',
-    type: 'public',
-    members: mockUsers,
-    messages: [],
-  },
-  {
-    id: '2',
-    name: 'random',
-    description: 'Random chat',
-    type: 'public',
-    members: mockUsers,
-    messages: [],
-  },
-  {
-    id: '3',
-    name: 'team-chat',
-    description: 'Private team discussions',
-    type: 'private',
-    members: [mockUsers[0], mockUsers[1]],
-    messages: [],
-  },
-];
-
-const initialConversations: DirectConversation[] = [
-  {
-    id: '1',
-    participants: [mockUsers[0], mockUsers[1]],
-    messages: [],
-  },
-  {
-    id: '2',
-    participants: [mockUsers[0], mockUsers[2]],
-    messages: [],
-  },
-];
-
-// Generate initial messages
-const generateMockMessages = (count: number, users: User[]): Message[] => {
-  const messages: Message[] = [];
-  const now = new Date();
-
-  for (let i = 0; i < count; i++) {
-    const sender = users[Math.floor(Math.random() * users.length)];
-    messages.push({
-      id: `msg-${i}`,
-      content: `This is test message ${i + 1}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.`,
-      sender,
-      timestamp: new Date(now.getTime() - (count - i) * 1000 * 60 * 5), // 5 minutes apart
-    });
-  }
-
-  return messages;
-};
-
-// Add initial messages
-initialChannels.forEach(channel => {
-  channel.messages = generateMockMessages(10, channel.members);
-});
-
-initialConversations.forEach(conversation => {
-  conversation.messages = generateMockMessages(8, conversation.participants);
-  conversation.lastMessage = conversation.messages[conversation.messages.length - 1];
-});
-
 export const useChatStore = create<ChatState>((set) => ({
-  channels: initialChannels,
-  conversations: initialConversations,
+  channels: [],
+  conversations: [],
   currentUser: mockUsers[0],
   selectedChannelId: null,
   selectedConversationId: null,
+
+  fetchChannels: async () => {
+    try {
+      const response = await channelService.getChannles();
+      console.log('Fetched channels:', response.data);
+      const channels = response.data;
+
+      set({ channels });
+    } catch (error) {
+      console.error('Failed to fetch channels:', error);
+    }
+  },
 
   addMessage: (content, channelId, conversationId) => {
     const newMessage: Message = {
@@ -123,7 +68,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
     set((state) => {
       if (channelId) {
-        const updatedChannels = state.channels.map(channel => {
+        const updatedChannels = state.channels.map((channel) => {
           if (channel.id === channelId) {
             return {
               ...channel,
@@ -136,7 +81,7 @@ export const useChatStore = create<ChatState>((set) => ({
       }
 
       if (conversationId) {
-        const updatedConversations = state.conversations.map(conversation => {
+        const updatedConversations = state.conversations.map((conversation) => {
           if (conversation.id === conversationId) {
             return {
               ...conversation,
@@ -155,16 +100,16 @@ export const useChatStore = create<ChatState>((set) => ({
 
   updateUserStatus: (userId, status) => {
     set((state) => {
-      const updatedChannels = state.channels.map(channel => ({
+      const updatedChannels = state.channels.map((channel) => ({
         ...channel,
-        members: channel.members.map(member =>
+        members: channel.members.map((member) =>
           member.id === userId ? { ...member, status } : member
         ),
       }));
 
-      const updatedConversations = state.conversations.map(conversation => ({
+      const updatedConversations = state.conversations.map((conversation) => ({
         ...conversation,
-        participants: conversation.participants.map(participant =>
+        participants: conversation.participants.map((participant) =>
           participant.id === userId ? { ...participant, status } : participant
         ),
       }));

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Hash, Users, Plus, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,15 @@ export function Sidebar({
   selectedConversationId,
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<'channels' | 'dms'>('channels');
-  const { channels, conversations, currentUser } = useChatStore();
+  const { channels, conversations, currentUser, fetchChannels } = useChatStore();
+
+  // Fetch channels when the Sidebar component mounts
+  useEffect(() => {
+    console.log('Fetching channels...');
+    fetchChannels();
+  }, [fetchChannels]);
+
+  // fetchChannels();
 
   return (
     <div className="w-64 border-r bg-muted/50 flex flex-col">
@@ -130,13 +138,13 @@ function ChannelList({ channels, selectedId, onSelect }: { channels: Channel[], 
 
 function DirectMessagesList({ conversations, selectedId, onSelect }: { conversations: DirectConversation[], selectedId: string | null, onSelect: (id: string) => void }) {
   const { currentUser } = useChatStore();
-  
+
   return (
     <div className="space-y-1">
       {conversations.map((conversation) => {
         const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
         if (!otherParticipant) return null;
-        
+
         return (
           <Button
             key={conversation.id}
