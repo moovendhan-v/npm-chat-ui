@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Channel, DirectConversation, Message, User } from '@/types';
 import { channelService } from './api/services/channel.service';
+import { userService } from './api/services/user.service';
 
 interface ChatState {
   channels: Channel[];
@@ -13,6 +14,7 @@ interface ChatState {
   setSelectedChannel: (channelId: string | null) => void;
   setSelectedConversation: (conversationId: string | null) => void;
   fetchChannels: () => Promise<void>;
+  fetchUsers: () => Promise<void>;
 }
 
 const mockUsers: User[] = [
@@ -22,21 +24,7 @@ const mockUsers: User[] = [
     email: 'jane@example.com',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&h=150&auto=format&fit=crop',
     status: 'online',
-  },
-  {
-    id: '2',
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&h=150&auto=format&fit=crop',
-    status: 'offline',
-  },
-  {
-    id: '3',
-    name: 'Alice Smith',
-    email: 'alice@example.com',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&h=150&auto=format&fit=crop',
-    status: 'away',
-  },
+  }
 ];
 
 export const useChatStore = create<ChatState>((set) => ({
@@ -50,13 +38,44 @@ export const useChatStore = create<ChatState>((set) => ({
     try {
       const response = await channelService.getChannles();
       console.log('Fetched channels:', response.data);
-      const channels = response.data;
-
+  
+      const channels = response.data.map((channel: any) => ({
+        ...channel,
+        members: channel.members || [],
+      }));
+  
       set({ channels });
     } catch (error) {
       console.error('Failed to fetch channels:', error);
     }
   },
+
+  fetchUsers: async () => {
+    try {
+      const response = await userService.getAllUsers();
+      console.log('Fetched users:', response.data);
+  
+      // Transform the response to match the expected structure
+      const conversations = response.data.map((user: any) => ({
+        id: user.id,
+        participants: [
+          {
+            id: user.id,
+            name: user.username,
+            email: user.email,
+            avatar: `https://api.dicebear.com/5.x/avataaars/svg?seed=${user.username}`,
+            status: 'offline', // Default status
+          },
+        ],
+        messages: [],
+        lastMessage: null,
+      }));
+  
+      set({ conversations });
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  },  
 
   addMessage: (content, channelId, conversationId) => {
     const newMessage: Message = {
@@ -67,6 +86,7 @@ export const useChatStore = create<ChatState>((set) => ({
     };
 
     set((state) => {
+      
       if (channelId) {
         const updatedChannels = state.channels.map((channel) => {
           if (channel.id === channelId) {
@@ -107,12 +127,17 @@ export const useChatStore = create<ChatState>((set) => ({
         ),
       }));
 
-      const updatedConversations = state.conversations.map((conversation) => ({
-        ...conversation,
-        participants: conversation.participants.map((participant) =>
-          participant.id === userId ? { ...participant, status } : participant
-        ),
-      }));
+      const updatedConversations = state.conversations.map((conversation) => {
+        if (conversation.participants) {
+          return {
+            ...conversation,
+            participants: conversation.participants.map((participant) =>
+              participant.id === userId ? { ...participant, status } : participant
+            ),
+          };
+        }
+        return conversation;
+      });
 
       return {
         channels: updatedChannels,

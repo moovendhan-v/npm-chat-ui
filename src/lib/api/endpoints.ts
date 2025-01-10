@@ -10,4 +10,7 @@ export const API_ENDPOINTS = {
     CHANNELS: {
       LIST: '/channels',
     },
+    USERS: {
+      LIST: '/users/all',
+    },
   } as const;

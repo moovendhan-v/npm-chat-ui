@@ -23,15 +23,17 @@ export function Sidebar({
   selectedConversationId,
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<'channels' | 'dms'>('channels');
-  const { channels, conversations, currentUser, fetchChannels } = useChatStore();
+  const { channels, conversations, currentUser, fetchChannels, fetchUsers } = useChatStore();
 
   // Fetch channels when the Sidebar component mounts
   useEffect(() => {
-    console.log('Fetching channels...');
+    console.log('Fetching Channle an user details...');
     fetchChannels();
-  }, [fetchChannels]);
-
-  // fetchChannels();
+    fetchUsers();
+    console.log("conversations ::", conversations);
+    console.log("channels ::", channels);
+    console.log("currentUser ::", currentUser);
+  }, [fetchChannels, fetchUsers]);
 
   return (
     <div className="w-64 border-r bg-muted/50 flex flex-col">
@@ -170,6 +172,38 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
       })}
     </div>
   );
+
+  // return (
+  //   <div className="space-y-1">
+  //     {conversations.map((conversation) => {
+  //       const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
+  //       if (!otherParticipant) return null;
+
+  //       return (
+  //         <Button
+  //           key={conversation.id}
+  //           variant={selectedId === conversation.id ? 'secondary' : 'ghost'}
+  //           className={cn(
+  //             'w-full justify-start',
+  //             selectedId === conversation.id && 'bg-muted'
+  //           )}
+  //           onClick={() => onSelect(conversation.id)}
+  //         >
+  //           <Avatar className="w-6 h-6 mr-2">
+  //             <AvatarImage src={otherParticipant.avatar} />
+  //             <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
+  //           </Avatar>
+  //           {otherParticipant.name}
+  //           <span className={cn(
+  //             'w-2 h-2 rounded-full ml-auto',
+  //             otherParticipant.status === 'online' ? 'bg-green-500' :
+  //             otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
+  //           )} />
+  //         </Button>
+  //       );
+  //     })}
+  //   </div>
+  // );
 }
 
 function UserProfile({ user }: { user: User }) {
