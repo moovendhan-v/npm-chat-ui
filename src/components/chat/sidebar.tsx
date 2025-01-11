@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useChatStore } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -120,13 +121,14 @@ function ChannelList({ channels, selectedId, onSelect }: { channels: Channel[], 
           key={channel.id}
           variant={selectedId === channel.id ? 'secondary' : 'ghost'}
           className={cn(
-            'w-full justify-start',
+            'w-full flex justify-between',
             selectedId === channel.id && 'bg-muted'
           )}
           onClick={() => onSelect(channel.id)}
         >
-          <Hash className="w-4 h-4 mr-2" />
-          {channel.name}
+          {/* <Hash className="w-4 h-4 mr-2" /> */}
+          {channel.name} <Badge variant="default"> {channel.participantCount}</Badge>
+
           {channel.type === 'private' && (
             <span className="ml-auto">
               <Users className="w-3 h-3" />
@@ -159,9 +161,9 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
           >
             <Avatar className="w-6 h-6 mr-2">
               <AvatarImage src={otherParticipant.avatar} />
-              <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
+              <AvatarFallback>{otherParticipant?.username[0]}</AvatarFallback>
             </Avatar>
-            {otherParticipant.name}
+            {otherParticipant?.username}
             <span className={cn(
               'w-2 h-2 rounded-full ml-auto',
               otherParticipant.status === 'online' ? 'bg-green-500' :
@@ -210,12 +212,12 @@ function UserProfile({ user }: { user: User }) {
   return (
     <div className="flex items-center">
       <Avatar className="w-8 h-8 mr-2">
-        <AvatarImage src={user.avatar} />
-        <AvatarFallback>{user.name[0]}</AvatarFallback>
+        <AvatarImage src={user?.avatar} />
+        <AvatarFallback>{user?.username[0]}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="text-sm font-medium">{user.name}</p>
-        <p className="text-xs text-muted-foreground">{user.status}</p>
+        <p className="text-sm font-medium">{user?.username}</p>
+        <p className="text-xs text-muted-foreground">{user?.status}</p>
       </div>
     </div>
   );

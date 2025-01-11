@@ -1,6 +1,6 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   avatar?: string;
   status?: 'online' | 'offline' | 'away';
@@ -21,6 +21,7 @@ export interface Channel {
   description?: string;
   type: 'public' | 'private';
   members: User[];
+  participantCount: number;
   messages: Message[];
 }
 
