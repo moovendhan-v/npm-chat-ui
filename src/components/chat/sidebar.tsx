@@ -130,7 +130,7 @@ export function Sidebar({
       </ScrollArea>
 
       <div className="p-1 border-t mt-auto">
-        {currentUser ? <UserProfile user={currentUser} /> : <Badge variant="default"> Loading</Badge>}
+        {currentUser ? <UserProfile user={currentUser} /> : <UserProfileSkeliton />}
       </div>
     </div>
   );
@@ -198,40 +198,7 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
       })}
     </div>
   );
-
-  // return (
-  //   <div className="space-y-1">
-  //     {conversations.map((conversation) => {
-  //       const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
-  //       if (!otherParticipant) return null;
-
-  //       return (
-  //         <Button
-  //           key={conversation.id}
-  //           variant={selectedId === conversation.id ? 'secondary' : 'ghost'}
-  //           className={cn(
-  //             'w-full justify-start',
-  //             selectedId === conversation.id && 'bg-muted'
-  //           )}
-  //           onClick={() => onSelect(conversation.id)}
-  //         >
-  //           <Avatar className="w-6 h-6 mr-2">
-  //             <AvatarImage src={otherParticipant.avatar} />
-  //             <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
-  //           </Avatar>
-  //           {otherParticipant.name}
-  //           <span className={cn(
-  //             'w-2 h-2 rounded-full ml-auto',
-  //             otherParticipant.status === 'online' ? 'bg-green-500' :
-  //             otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
-  //           )} />
-  //         </Button>
-  //       );
-  //     })}
-  //   </div>
-  // );
 }
-
 
 function UserProfile({ user }: { user: MyPorfile }) {
   return (
@@ -244,7 +211,22 @@ function UserProfile({ user }: { user: MyPorfile }) {
       </Avatar>
       <div className="flex-1">
         <p className="text-sm font-medium text-foreground">{user?.username}</p>
-        <p className="text-xs text-muted-foreground capitalize">{user?.status || 'offline'}</p>
+        <p className="text-xs text-muted-foreground capitalize">{user?.status || 'Online'}</p>
+      </div>
+    </div>
+  );
+}
+
+function UserProfileSkeliton() {
+  return (
+    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted animate-pulse">
+      {/* Avatar Skeleton */}
+      <div className="w-10 h-10 bg-muted rounded-full" />
+
+      {/* Text Skeletons */}
+      <div className="flex-1 space-y-2">
+        <div className="w-2/3 h-4 bg-muted rounded-md" />
+        <div className="w-1/3 h-3 bg-muted rounded-md" />
       </div>
     </div>
   );
