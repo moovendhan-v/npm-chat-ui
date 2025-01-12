@@ -4,11 +4,13 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useChatStore } from '@/lib/store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Channel, DirectConversation, User } from '@/types';
+import { Channel, DirectConversation, MyPorfile } from '@/types';
+
+const DefaultAvatar = "https://cdn.pixabay.com/photo/2021/01/24/20/47/tabby-5946499_1280.jpg";
 
 interface SidebarProps {
   onChannelSelect: (id: string) => void;
@@ -24,17 +26,38 @@ export function Sidebar({
   selectedConversationId,
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<'channels' | 'dms'>('channels');
-  const { channels, conversations, currentUser, fetchChannels, fetchUsers } = useChatStore();
 
-  // Fetch channels when the Sidebar component mounts
+  const {
+    fetchChannels,
+    fetchUsers,
+    initializeCurrentUser,
+    conversations,
+    channels,
+    currentUser,
+  } = useChatStore(
+    state => ({
+      fetchChannels: state.fetchChannels,
+      fetchUsers: state.fetchUsers,
+      initializeCurrentUser: state.initializeCurrentUser,
+      conversations: state.conversations,
+      channels: state.channels,
+      currentUser: state.currentUser,
+    })
+  );
+
   useEffect(() => {
-    console.log('Fetching Channle an user details...');
+    console.log('Fetching channel and user details...');
     fetchChannels();
     fetchUsers();
-    console.log("conversations ::", conversations);
-    console.log("channels ::", channels);
-    console.log("currentUser ::", currentUser);
-  }, [fetchChannels, fetchUsers]);
+    initializeCurrentUser();
+  }, [fetchChannels, fetchUsers, initializeCurrentUser]);
+
+  useEffect(() => {
+    console.log('conversations:', conversations);
+    console.log('channels:', channels);
+    console.log('currentUser:', currentUser);
+    console.log("username", currentUser?.username);
+  }, [conversations, channels, currentUser]);
 
   return (
     <div className="w-64 border-r bg-muted/50 flex flex-col">
@@ -106,8 +129,8 @@ export function Sidebar({
         )}
       </ScrollArea>
 
-      <div className="p-4 border-t mt-auto">
-        <UserProfile user={currentUser} />
+      <div className="p-1 border-t mt-auto">
+        {currentUser ? <UserProfile user={currentUser} /> : <Badge variant="default"> Loading</Badge>}
       </div>
     </div>
   );
@@ -147,6 +170,7 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
     <div className="space-y-1">
       {conversations.map((conversation) => {
         const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
+        console.log("otherParticipant", otherParticipant);
         if (!otherParticipant) return null;
 
         return (
@@ -161,13 +185,13 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
           >
             <Avatar className="w-6 h-6 mr-2">
               <AvatarImage src={otherParticipant.avatar} />
-              <AvatarFallback>{otherParticipant?.username[0]}</AvatarFallback>
+              <AvatarFallback>{otherParticipant?.name}</AvatarFallback>
             </Avatar>
-            {otherParticipant?.username}
+            {otherParticipant?.name}
             <span className={cn(
               'w-2 h-2 rounded-full ml-auto',
               otherParticipant.status === 'online' ? 'bg-green-500' :
-              otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
+                otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
             )} />
           </Button>
         );
@@ -208,16 +232,19 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
   // );
 }
 
-function UserProfile({ user }: { user: User }) {
+
+function UserProfile({ user }: { user: MyPorfile }) {
   return (
-    <div className="flex items-center">
-      <Avatar className="w-8 h-8 mr-2">
-        <AvatarImage src={user?.avatar} />
-        <AvatarFallback>{user?.username[0]}</AvatarFallback>
+    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
+      <Avatar className="w-10 h-10">
+        <AvatarImage src={user?.avatar || DefaultAvatar} />
+        <AvatarFallback className="text-sm">
+          {user?.username?.charAt(0).toUpperCase()}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="text-sm font-medium">{user?.username}</p>
-        <p className="text-xs text-muted-foreground">{user?.status}</p>
+        <p className="text-sm font-medium text-foreground">{user?.username}</p>
+        <p className="text-xs text-muted-foreground capitalize">{user?.status || 'offline'}</p>
       </div>
     </div>
   );

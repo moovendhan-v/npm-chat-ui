@@ -1,12 +1,12 @@
 import { create } from 'zustand';
-import { Channel, DirectConversation, Message, User } from '@/types';
+import { Channel, DirectConversation, Message, User, MyPorfile } from '@/types';
 import { channelService } from './api/services/channel.service';
 import { userService } from './api/services/user.service';
 
 interface ChatState {
   channels: Channel[];
   conversations: DirectConversation[];
-  currentUser: User;
+  currentUser: MyPorfile;
   selectedChannelId: string | null;
   selectedConversationId: string | null;
   addMessage: (content: string, channelId?: string, conversationId?: string) => void;
@@ -18,21 +18,12 @@ interface ChatState {
   fetchUsers: () => Promise<void>;
 }
 
-const mockUsers: User[] = [
-  {
-    id: '1',
-    username: 'Jane Cooper',
-    email: 'jane@example.com',
-    status: 'online',
-  }
-];
-
 export const useChatStore = create<ChatState>((set) => ({
   channels: [],
   conversations: [],
   selectedChannelId: null,
   // currentUser: userService.getMyDetails('6755b40aa4f6b550fd0e1195'),
-  currentUser: null as unknown as User,
+  currentUser: null as unknown as MyPorfile,
   selectedConversationId: null,
 
   initializeCurrentUser: async () => {
@@ -96,14 +87,24 @@ export const useChatStore = create<ChatState>((set) => ({
   },
 
   addMessage: (content, channelId, conversationId) => {
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      content,
-      sender: mockUsers[0], // Current user
-      timestamp: new Date(),
-    };
+
 
     set((state) => {
+
+      const { currentUser } = state;
+
+      // Validate if currentUser is defined
+      if (!currentUser) {
+        console.error("Cannot send message: currentUser is not defined.");
+        return state;
+      }
+
+      const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        content,
+        sender: currentUser, // Current user
+        timestamp: new Date(),
+      };
 
       if (channelId) {
         const updatedChannels = state.channels.map((channel) => {
@@ -170,7 +171,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
 
 // Initialize the current user when the store is created
-(async () => {
-  const chatStore = useChatStore.getState();
-  await chatStore.initializeCurrentUser();
-})();
+// (async () => {
+//   const chatStore = useChatStore.getState();
+//   await chatStore.initializeCurrentUser();
+// })();
