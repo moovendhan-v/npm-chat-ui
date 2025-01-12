@@ -1,14 +1,21 @@
 import { create } from 'zustand';
-import { Channel, DirectConversation, Message, User, MyPorfile } from '@/types';
-import { channelService } from './api/services/channel.service';
-import { userService } from './api/services/user.service';
+import { Channel, DirectConversation, Message, User } from '@/types';
+import { channelService } from '../services/channel.service';
+import { userService } from '../services/user.service';
 
 interface ChatState {
   channels: Channel[];
   conversations: DirectConversation[];
-  currentUser: MyPorfile;
+  currentUser: User;
   selectedChannelId: string | null;
   selectedConversationId: string | null;
+  onlineUsers: User[];
+  typingUsers: {
+    userId: string;
+    channelId?: string;
+    conversationId?: string;
+  }[];
+
   addMessage: (content: string, channelId?: string, conversationId?: string) => void;
   updateUserStatus: (userId: string, status: User['status']) => void;
   setSelectedChannel: (channelId: string | null) => void;
@@ -16,15 +23,26 @@ interface ChatState {
   initializeCurrentUser: () => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchUsers: () => Promise<void>;
+  addTypingUser: (data: {
+    userId: string;
+    channelId?: string;
+    conversationId?: string;
+  }) => void;
+  removeTypingUser: (data: {
+    userId: string;
+    channelId?: string;
+    conversationId?: string;
+  }) => void;
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   channels: [],
   conversations: [],
   selectedChannelId: null,
-  // currentUser: userService.getMyDetails('6755b40aa4f6b550fd0e1195'),
-  currentUser: null as unknown as MyPorfile,
+  currentUser: null as unknown as User,
   selectedConversationId: null,
+  onlineUsers: [],
+  typingUsers: [],
 
   initializeCurrentUser: async () => {
     try {
@@ -34,7 +52,9 @@ export const useChatStore = create<ChatState>((set) => ({
 
       // Check if the response data is an array and if so, set the first user
       if (Array.isArray(response.data) && response.data.length > 0) {
-        set({ currentUser: response.data[0] });
+        const user = response.data[0];
+        const DefaultAvatar = "https://cdn.pixabay.com/photo/2021/01/24/20/47/tabby-5946499_1280.jpg";
+        set({ currentUser: { ...user, avatar: user?.avatar || DefaultAvatar } });
       } else {
         console.error('No user found in response');
       }
@@ -70,7 +90,7 @@ export const useChatStore = create<ChatState>((set) => ({
         participants: [
           {
             id: user.id,
-            name: user.username,
+            username: user.username,
             email: user.email,
             avatar: `https://api.dicebear.com/5.x/avataaars/svg?seed=${user.username}`,
             status: 'offline', // Default status
@@ -167,6 +187,21 @@ export const useChatStore = create<ChatState>((set) => ({
 
   setSelectedChannel: (channelId) => set({ selectedChannelId: channelId, selectedConversationId: null }),
   setSelectedConversation: (conversationId) => set({ selectedConversationId: conversationId, selectedChannelId: null }),
+
+  addTypingUser: (data) =>
+    set((state) => ({
+      typingUsers: [...state.typingUsers, data],
+    })),
+
+  removeTypingUser: (data) =>
+    set((state) => ({
+      typingUsers: state.typingUsers.filter(
+        (user) =>
+          user.userId !== data.userId ||
+          user.channelId !== data.channelId ||
+          user.conversationId !== data.conversationId
+      ),
+    })),
 }));
 
 

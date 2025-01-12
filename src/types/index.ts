@@ -1,23 +1,17 @@
 export interface User {
   id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  status?: 'online' | 'offline' | 'away';
-}
-
-export interface MyPorfile {
-  id: string;
   username: string;
   email: string;
   avatar?: string;
   status?: 'online' | 'offline' | 'away';
+  lastSeen?: string;
 }
+
 
 export interface Message {
   id: string;
   content: string;
-  sender: MyPorfile;
+  sender: User;
   timestamp: Date;
   channelId?: string;
   conversationId?: string;

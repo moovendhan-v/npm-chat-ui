@@ -6,11 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useChatStore } from '@/lib/store';
+import { useChatStore } from '@/lib/api/store/store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Channel, DirectConversation, MyPorfile } from '@/types';
-
-const DefaultAvatar = "https://cdn.pixabay.com/photo/2021/01/24/20/47/tabby-5946499_1280.jpg";
+import { Channel, DirectConversation, User } from '@/types';
 
 interface SidebarProps {
   onChannelSelect: (id: string) => void;
@@ -56,7 +54,6 @@ export function Sidebar({
     console.log('conversations:', conversations);
     console.log('channels:', channels);
     console.log('currentUser:', currentUser);
-    console.log("username", currentUser?.username);
   }, [conversations, channels, currentUser]);
 
   return (
@@ -178,33 +175,68 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
             key={conversation.id}
             variant={selectedId === conversation.id ? 'secondary' : 'ghost'}
             className={cn(
-              'w-full justify-start',
+              'w-full justify-start py-8',
               selectedId === conversation.id && 'bg-muted'
             )}
             onClick={() => onSelect(conversation.id)}
           >
-            <Avatar className="w-6 h-6 mr-2">
+            <Avatar className="w-8 h-8 mr-2">
               <AvatarImage src={otherParticipant.avatar} />
-              <AvatarFallback>{otherParticipant?.name}</AvatarFallback>
+              <AvatarFallback className='font-semibold text-sm truncate max-w-[15px]'>{otherParticipant?.username}</AvatarFallback>
             </Avatar>
-            {otherParticipant?.name}
-            <span className={cn(
-              'w-2 h-2 rounded-full ml-auto',
-              otherParticipant.status === 'online' ? 'bg-green-500' :
-                otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
-            )} />
+
+            <div className='flex flex-col items-start'>
+
+            {/* Truncate the username if it's too long */}
+            <div className="flex items-center">
+              <p className="font-semibold text-sm truncate max-w-[140px]">
+                {otherParticipant?.username}
+              </p>
+            </div>
+
+              {/* Participant Name */}
+              <div>
+                <p className="text-sm text-muted-foreground">{"lastseens"}</p>
+              </div>
+
+            </div>
+
+
+            {/* Status dot */}
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full ml-auto',
+                otherParticipant.status === 'online' ? 'bg-green-500' :
+                  otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
+              )}
+            />
+
+            {/* Typing or Last Seen */}
+            {/* <div className="ml-2 text-sm text-muted-foreground">
+              {true ? (
+                <span>Typing...</span>
+              ) : (
+                <span>Last seen: {formatLastSeen(otherParticipant?.lastSeen ?? new Date())}</span>
+              )}
+            </div> */}
           </Button>
         );
+
       })}
     </div>
   );
 }
 
-function UserProfile({ user }: { user: MyPorfile }) {
+const formatLastSeen = (timestamp: string | Date) => {
+  const date = new Date(timestamp); // Convert to Date if it's not already
+  return `${date.getHours()}:${date.getMinutes()}`;
+};
+
+function UserProfile({ user }: { user: User }) {
   return (
     <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
       <Avatar className="w-10 h-10">
-        <AvatarImage src={user?.avatar || DefaultAvatar} />
+        <AvatarImage src={user?.avatar} />
         <AvatarFallback className="text-sm">
           {user?.username?.charAt(0).toUpperCase()}
         </AvatarFallback>

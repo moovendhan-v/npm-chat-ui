@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { ChatWindow } from './chat-window';
 import { cn } from '@/lib/utils';
-import { useChatStore } from '@/lib/store';
+import { useChatStore } from '@/lib/api/store/store';
 
 export function ChatLayout() {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
