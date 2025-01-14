@@ -49,7 +49,6 @@ export const useChatStore = create<ChatState>((set) => ({
     try {
       // Ensure response data is an array of users
       const response = await userService.getMyDetails('6755b40aa4f6b550fd0e1195');
-      console.log('Fetched current user:', response.data);
 
       // Check if the response data is an array and if so, set the first user
       if (Array.isArray(response.data) && response.data.length > 0) {
@@ -67,7 +66,6 @@ export const useChatStore = create<ChatState>((set) => ({
   fetchChannels: async () => {
     try {
       const response = await channelService.getChannles();
-      console.log('Fetched channels:', response.data);
 
       const channels = response.data.map((channel: any) => ({
         ...channel,
@@ -88,6 +86,7 @@ export const useChatStore = create<ChatState>((set) => ({
       // Transform the response to match the expected structure
       const conversations = response.data.map((user: any) => ({
         id: user.id,
+        chatId: user.oneOnOneChats[0]?.id,
         participants: [
           {
             id: user.id,
@@ -162,23 +161,29 @@ export const useChatStore = create<ChatState>((set) => ({
   fetchChatMessage: async (chatId: string) => {
     try {
       const response = await chatService.getMessages(chatId);
-      console.log('Fetched messages:', response.data);
-  
+      console.log('Fetched messages:', chatId, response.data);
+
       const messages = response.data.map((message: any) => ({
         id: message.id,
         content: message.content,
         sender: message.sender,
         timestamp: new Date(message.createdAt),
       }));
-  
+      console.log('Transformed messages:', messages);
+
       set((state) => {
+        console.log('Transformed messages checking:', state.conversations.forEach((conversation) => {
+          console.log('Transformed messages checking:', conversation.chatId, chatId);
+        }));
         // Find the conversation or channel associated with the chatId
         const updatedConversations = state.conversations.map((conversation) =>
-          conversation.id === chatId
+          conversation.chatId === chatId
             ? { ...conversation, messages }
             : conversation
         );
-  
+
+        console.log('Updated conversations:', updatedConversations);
+
         return { conversations: updatedConversations };
       });
     } catch (error) {

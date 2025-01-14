@@ -44,13 +44,13 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
   };
 
   const getMessages = () => {
+    console.log('conversations::', conversations);
     if (channelId) {
       const channel = channels.find(c => c.id === channelId);
       return channel?.messages || [];
     }
     if (conversationId) {
       const conversation = conversations.find(c => c.id === conversationId);
-      console.log('conversation::', conversation);
       return conversation?.messages || [];
     }
     return [];
@@ -132,8 +132,6 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
 
 function ChatHeader({ channelId, conversationId }: ChatWindowProps) {
   const { channels, conversations } = useChatStore();
-  console.log('ChatHeader channels:', channels);
-  console.log('ChatHeader conversations:', conversationId, conversations);
 
   const getHeaderInfo = () => {
     if (channelId) {
@@ -146,9 +144,7 @@ function ChatHeader({ channelId, conversationId }: ChatWindowProps) {
     }
     if (conversationId) {
       const conversation = conversations.find(c => c.id === conversationId);
-      console.log('conversation:', conversation);
       const participant = conversation?.participants[0];
-      console.log('participant:', participant);
       return {
         name: participant?.username,
         subtitle: participant?.status,

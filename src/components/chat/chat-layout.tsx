@@ -16,16 +16,14 @@ export function ChatLayout() {
 
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-  console.log('selectedChannelId:', selectedChannelId);
 
   const handleChannelSelect = (channelId: string) => {
     setSelectedChannelId(channelId);
     setSelectedConversationId(null); // Clear conversation when selecting channel
   };
 
-  const handleConversationSelect = (conversationId: string) => {
-    console.log("Selecting the converstation id::", conversationId);
-    fetchChatMessage(conversationId);
+  const handleConversationSelect = (conversationId: string, chatid: string) => {
+    fetchChatMessage(chatid);
     setSelectedConversationId(conversationId);
     setSelectedChannelId(null); // Clear channel when selecting conversation
   };

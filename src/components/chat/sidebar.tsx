@@ -12,7 +12,7 @@ import { Channel, DirectConversation, User } from '@/types';
 
 interface SidebarProps {
   onChannelSelect: (id: string) => void;
-  onConversationSelect: (id: string) => void;
+  onConversationSelect: (id: string, chatid: string) => void;
   selectedChannelId: string | null;
   selectedConversationId: string | null;
 }
@@ -45,16 +45,12 @@ export function Sidebar({
   );
 
   useEffect(() => {
-    console.log('Fetching channel and user details...');
     fetchChannels();
     fetchUsers();
     initializeCurrentUser();
   }, [fetchChannels, fetchUsers, initializeCurrentUser]);
 
   useEffect(() => {
-    console.log('conversations:', conversations);
-    console.log('channels:', channels);
-    console.log('currentUser:', currentUser);
   }, [conversations, channels, currentUser]);
 
   return (
@@ -161,14 +157,14 @@ function ChannelList({ channels, selectedId, onSelect }: { channels: Channel[], 
   );
 }
 
-function DirectMessagesList({ conversations, selectedId, onSelect }: { conversations: DirectConversation[], selectedId: string | null, onSelect: (id: string) => void }) {
+function DirectMessagesList({ conversations, selectedId, onSelect }: { conversations: DirectConversation[], selectedId: string | null, onSelect: (id: string, chatId: string) => void }) {
   const { currentUser } = useChatStore();
 
   return (
     <div className="space-y-1">
       {conversations.map((conversation) => {
+
         const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
-        console.log("otherParticipant", otherParticipant);
         if (!otherParticipant) return null;
 
         return (
@@ -179,7 +175,7 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
               'w-full justify-start py-8',
               selectedId === conversation.id && 'bg-muted'
             )}
-            onClick={() => onSelect(conversation.id)}
+            onClick={() => onSelect(conversation.id, conversation.chatId)}
           >
             <Avatar className="w-8 h-8 mr-2">
               <AvatarImage src={otherParticipant.avatar} />

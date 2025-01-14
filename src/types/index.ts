@@ -39,6 +39,7 @@ export interface Channel {
 
 export interface DirectConversation {
   id: string;
+  chatId: string;
   participants: User[];
   messages: Message[];
   lastMessage?: Message;
