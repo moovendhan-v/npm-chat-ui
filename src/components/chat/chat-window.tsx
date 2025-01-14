@@ -37,6 +37,7 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
   }, [currentUser]);
 
   const handleSendMessage = () => {
+    // TODO: Handle sending message via api call and socket
     if (!message.trim()) return;
     addMessage(message.trim(), channelId || undefined, conversationId || undefined);
     setMessage('');
@@ -49,6 +50,7 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
     }
     if (conversationId) {
       const conversation = conversations.find(c => c.id === conversationId);
+      console.log('conversation::', conversation);
       return conversation?.messages || [];
     }
     return [];
@@ -130,6 +132,8 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
 
 function ChatHeader({ channelId, conversationId }: ChatWindowProps) {
   const { channels, conversations } = useChatStore();
+  console.log('ChatHeader channels:', channels);
+  console.log('ChatHeader conversations:', conversationId, conversations);
 
   const getHeaderInfo = () => {
     if (channelId) {
@@ -142,7 +146,9 @@ function ChatHeader({ channelId, conversationId }: ChatWindowProps) {
     }
     if (conversationId) {
       const conversation = conversations.find(c => c.id === conversationId);
-      const participant = conversation?.participants[1]; // Get the other participant
+      console.log('conversation:', conversation);
+      const participant = conversation?.participants[0];
+      console.log('participant:', participant);
       return {
         name: participant?.username,
         subtitle: participant?.status,

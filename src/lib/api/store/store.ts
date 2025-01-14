@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Channel, DirectConversation, Message, User } from '@/types';
 import { channelService } from '../services/channel.service';
 import { userService } from '../services/user.service';
+import { chatService } from '../services/chat.service';
 
 interface ChatState {
   channels: Channel[];
@@ -15,7 +16,6 @@ interface ChatState {
     channelId?: string;
     conversationId?: string;
   }[];
-
   addMessage: (content: string, channelId?: string, conversationId?: string) => void;
   updateUserStatus: (userId: string, status: User['status']) => void;
   setSelectedChannel: (channelId: string | null) => void;
@@ -23,6 +23,7 @@ interface ChatState {
   initializeCurrentUser: () => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchUsers: () => Promise<void>;
+  fetchChatMessage: (chatId: string) => Promise<void>; // Updated to accept chatId
   addTypingUser: (data: {
     userId: string;
     channelId?: string;
@@ -100,6 +101,8 @@ export const useChatStore = create<ChatState>((set) => ({
         lastMessage: null,
       }));
 
+      console.log('Transformed users:', conversations);
+
       set({ conversations });
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -107,7 +110,6 @@ export const useChatStore = create<ChatState>((set) => ({
   },
 
   addMessage: (content, channelId, conversationId) => {
-
 
     set((state) => {
 
@@ -155,6 +157,33 @@ export const useChatStore = create<ChatState>((set) => ({
 
       return state;
     });
+  },
+
+  fetchChatMessage: async (chatId: string) => {
+    try {
+      const response = await chatService.getMessages(chatId);
+      console.log('Fetched messages:', response.data);
+  
+      const messages = response.data.map((message: any) => ({
+        id: message.id,
+        content: message.content,
+        sender: message.sender,
+        timestamp: new Date(message.createdAt),
+      }));
+  
+      set((state) => {
+        // Find the conversation or channel associated with the chatId
+        const updatedConversations = state.conversations.map((conversation) =>
+          conversation.id === chatId
+            ? { ...conversation, messages }
+            : conversation
+        );
+  
+        return { conversations: updatedConversations };
+      });
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
   },
 
   updateUserStatus: (userId, status) => {

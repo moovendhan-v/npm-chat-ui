@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
     },
     CHAT: {
       LIST: '/chats',
-      MESSAGES: (chatId: string) => `/chats/${chatId}/messages`,
+      MESSAGES: (chatId: string) => `/chats/private/678475566c6d59a6245184de/messages`, // Update this duynamically
     },
     CHANNELS: {
       LIST: '/channels/all',

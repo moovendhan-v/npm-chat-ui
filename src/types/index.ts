@@ -5,8 +5,18 @@ export interface User {
   avatar?: string;
   status?: 'online' | 'offline' | 'away';
   lastSeen?: string;
+  createdAt: string;
+  chatsSent: Chat[];
+  chatsReceived: Chat[];
+  oneOnOneChats: Chat[];
 }
 
+export interface Chat {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  createdAt: string;
+}
 
 export interface Message {
   id: string;

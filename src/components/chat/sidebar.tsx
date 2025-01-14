@@ -37,6 +37,7 @@ export function Sidebar({
       fetchChannels: state.fetchChannels,
       fetchUsers: state.fetchUsers,
       initializeCurrentUser: state.initializeCurrentUser,
+      fetchChatMessage: state.fetchChatMessage,
       conversations: state.conversations,
       channels: state.channels,
       currentUser: state.currentUser,
@@ -187,22 +188,17 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
 
             <div className='flex flex-col items-start'>
 
-            {/* Truncate the username if it's too long */}
             <div className="flex items-center">
               <p className="font-semibold text-sm truncate max-w-[140px]">
                 {otherParticipant?.username}
               </p>
             </div>
 
-              {/* Participant Name */}
               <div>
                 <p className="text-sm text-muted-foreground">{"lastseens"}</p>
               </div>
 
             </div>
-
-
-            {/* Status dot */}
             <span
               className={cn(
                 'w-2 h-2 rounded-full ml-auto',
@@ -210,15 +206,6 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
                   otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
               )}
             />
-
-            {/* Typing or Last Seen */}
-            {/* <div className="ml-2 text-sm text-muted-foreground">
-              {true ? (
-                <span>Typing...</span>
-              ) : (
-                <span>Last seen: {formatLastSeen(otherParticipant?.lastSeen ?? new Date())}</span>
-              )}
-            </div> */}
           </Button>
         );
 
@@ -226,11 +213,6 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
     </div>
   );
 }
-
-const formatLastSeen = (timestamp: string | Date) => {
-  const date = new Date(timestamp); // Convert to Date if it's not already
-  return `${date.getHours()}:${date.getMinutes()}`;
-};
 
 function UserProfile({ user }: { user: User }) {
   return (

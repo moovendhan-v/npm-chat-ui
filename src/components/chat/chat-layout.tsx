@@ -5,8 +5,18 @@ import { cn } from '@/lib/utils';
 import { useChatStore } from '@/lib/api/store/store';
 
 export function ChatLayout() {
+
+  const {
+    fetchChatMessage,
+  } = useChatStore(
+    state => ({
+      fetchChatMessage: state.fetchChatMessage,
+    })
+  );
+
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  console.log('selectedChannelId:', selectedChannelId);
 
   const handleChannelSelect = (channelId: string) => {
     setSelectedChannelId(channelId);
@@ -14,6 +24,8 @@ export function ChatLayout() {
   };
 
   const handleConversationSelect = (conversationId: string) => {
+    console.log("Selecting the converstation id::", conversationId);
+    fetchChatMessage(conversationId);
     setSelectedConversationId(conversationId);
     setSelectedChannelId(null); // Clear channel when selecting conversation
   };
