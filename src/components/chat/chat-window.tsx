@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { useChatStore } from '@/lib/store';
+import { useChatStore } from '@/lib/api/store/store';
+import SocketClient from '@/lib/socket';
 
 interface ChatWindowProps {
   channelId: string | null;
@@ -14,15 +15,36 @@ interface ChatWindowProps {
 
 export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
   const [message, setMessage] = useState('');
+  // const [isTyping, setIsTyping] = useState(false);
+  // const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { channels, conversations, currentUser, addMessage } = useChatStore();
+  const socketClient = SocketClient.getInstance();
+
+  useEffect(() => {
+    if (currentUser) {
+      // Join chat when component mounts and currentUser is available
+      socketClient.joinChat(currentUser);
+
+      // Set up message listener
+      const unsubscribeMessage = socketClient.onMessageReceived((message) => {
+        addMessage(message.content);
+      });
+
+      return () => {
+        unsubscribeMessage();
+      };
+    }
+  }, [currentUser]);
 
   const handleSendMessage = () => {
+    // TODO: Handle sending message via api call and socket
     if (!message.trim()) return;
     addMessage(message.trim(), channelId || undefined, conversationId || undefined);
     setMessage('');
   };
 
   const getMessages = () => {
+    console.log('conversations::', conversations);
     if (channelId) {
       const channel = channels.find(c => c.id === channelId);
       return channel?.messages || [];
@@ -52,16 +74,16 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
               {message.sender.id !== currentUser.id && (
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={message.sender.avatar} />
-                  <AvatarFallback>{message.sender.name[0]}</AvatarFallback>
+                  <AvatarFallback>{message.sender.username}</AvatarFallback>
                 </Avatar>
               )}
               <div>
                 {message.sender.id !== currentUser.id && (
-                  <p className="text-sm font-medium mb-1">{message.sender.name}</p>
+                  <p className="text-sm font-medium mb-1">{message.sender.username}</p>
                 )}
                 <div
                   className={cn(
-                    'rounded-lg p-3 max-w-md',
+                    'rounded-lg p-2 max-w-md',
                     message.sender.id === currentUser.id
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
@@ -79,7 +101,7 @@ export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
               {message.sender.id === currentUser.id && (
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={message.sender.avatar} />
-                  <AvatarFallback>{message.sender.name[0]}</AvatarFallback>
+                  <AvatarFallback>{message.sender.username}</AvatarFallback>
                 </Avatar>
               )}
             </div>
@@ -122,9 +144,9 @@ function ChatHeader({ channelId, conversationId }: ChatWindowProps) {
     }
     if (conversationId) {
       const conversation = conversations.find(c => c.id === conversationId);
-      const participant = conversation?.participants[1]; // Get the other participant
+      const participant = conversation?.participants[0];
       return {
-        name: participant?.name,
+        name: participant?.username,
         subtitle: participant?.status,
         avatar: participant?.avatar,
       };

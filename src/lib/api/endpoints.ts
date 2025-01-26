@@ -5,9 +5,13 @@ export const API_ENDPOINTS = {
     },
     CHAT: {
       LIST: '/chats',
-      MESSAGES: (chatId: string) => `/chats/${chatId}/messages`,
+      MESSAGES: (chatId: string) => `/chats/private/${chatId}/messages`, // Update this duynamically
     },
     CHANNELS: {
-      LIST: '/channels',
+      LIST: '/channels/all',
+    },
+    USERS: {
+      LIST: '/users/all',
+      ME: (userId: string) => `/users?id=${userId}`
     },
   } as const;

@@ -1,9 +1,21 @@
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
   avatar?: string;
   status?: 'online' | 'offline' | 'away';
+  lastSeen?: string;
+  createdAt: string;
+  chatsSent: Chat[];
+  chatsReceived: Chat[];
+  oneOnOneChats: Chat[];
+}
+
+export interface Chat {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  createdAt: string;
 }
 
 export interface Message {
@@ -21,11 +33,13 @@ export interface Channel {
   description?: string;
   type: 'public' | 'private';
   members: User[];
+  participantCount: number;
   messages: Message[];
 }
 
 export interface DirectConversation {
   id: string;
+  chatId: string;
   participants: User[];
   messages: Message[];
   lastMessage?: Message;

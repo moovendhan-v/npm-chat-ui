@@ -4,14 +4,15 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useChatStore } from '@/lib/store';
+import { useChatStore } from '@/lib/api/store/store';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Channel, DirectConversation, User } from '@/types';
 
 interface SidebarProps {
   onChannelSelect: (id: string) => void;
-  onConversationSelect: (id: string) => void;
+  onConversationSelect: (id: string, chatid: string) => void;
   selectedChannelId: string | null;
   selectedConversationId: string | null;
 }
@@ -23,15 +24,34 @@ export function Sidebar({
   selectedConversationId,
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<'channels' | 'dms'>('channels');
-  const { channels, conversations, currentUser, fetchChannels } = useChatStore();
 
-  // Fetch channels when the Sidebar component mounts
+  const {
+    fetchChannels,
+    fetchUsers,
+    initializeCurrentUser,
+    conversations,
+    channels,
+    currentUser,
+  } = useChatStore(
+    state => ({
+      fetchChannels: state.fetchChannels,
+      fetchUsers: state.fetchUsers,
+      initializeCurrentUser: state.initializeCurrentUser,
+      fetchChatMessage: state.fetchChatMessage,
+      conversations: state.conversations,
+      channels: state.channels,
+      currentUser: state.currentUser,
+    })
+  );
+
   useEffect(() => {
-    console.log('Fetching channels...');
     fetchChannels();
-  }, [fetchChannels]);
+    fetchUsers();
+    initializeCurrentUser();
+  }, [fetchChannels, fetchUsers, initializeCurrentUser]);
 
-  // fetchChannels();
+  useEffect(() => {
+  }, [conversations, channels, currentUser]);
 
   return (
     <div className="w-64 border-r bg-muted/50 flex flex-col">
@@ -103,8 +123,8 @@ export function Sidebar({
         )}
       </ScrollArea>
 
-      <div className="p-4 border-t mt-auto">
-        <UserProfile user={currentUser} />
+      <div className="p-1 border-t mt-auto">
+        {currentUser ? <UserProfile user={currentUser} /> : <UserProfileSkeliton />}
       </div>
     </div>
   );
@@ -118,13 +138,14 @@ function ChannelList({ channels, selectedId, onSelect }: { channels: Channel[], 
           key={channel.id}
           variant={selectedId === channel.id ? 'secondary' : 'ghost'}
           className={cn(
-            'w-full justify-start',
+            'w-full flex justify-between',
             selectedId === channel.id && 'bg-muted'
           )}
           onClick={() => onSelect(channel.id)}
         >
-          <Hash className="w-4 h-4 mr-2" />
-          {channel.name}
+          {/* <Hash className="w-4 h-4 mr-2" /> */}
+          {channel.name} <Badge variant="default"> {channel.participantCount}</Badge>
+
           {channel.type === 'private' && (
             <span className="ml-auto">
               <Users className="w-3 h-3" />
@@ -136,12 +157,13 @@ function ChannelList({ channels, selectedId, onSelect }: { channels: Channel[], 
   );
 }
 
-function DirectMessagesList({ conversations, selectedId, onSelect }: { conversations: DirectConversation[], selectedId: string | null, onSelect: (id: string) => void }) {
+function DirectMessagesList({ conversations, selectedId, onSelect }: { conversations: DirectConversation[], selectedId: string | null, onSelect: (id: string, chatId: string) => void }) {
   const { currentUser } = useChatStore();
 
   return (
     <div className="space-y-1">
       {conversations.map((conversation) => {
+
         const otherParticipant = conversation.participants.find(p => p.id !== currentUser.id);
         if (!otherParticipant) return null;
 
@@ -150,23 +172,39 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
             key={conversation.id}
             variant={selectedId === conversation.id ? 'secondary' : 'ghost'}
             className={cn(
-              'w-full justify-start',
+              'w-full justify-start py-8',
               selectedId === conversation.id && 'bg-muted'
             )}
-            onClick={() => onSelect(conversation.id)}
+            onClick={() => onSelect(conversation.id, conversation.chatId)}
           >
-            <Avatar className="w-6 h-6 mr-2">
+            <Avatar className="w-8 h-8 mr-2">
               <AvatarImage src={otherParticipant.avatar} />
-              <AvatarFallback>{otherParticipant.name[0]}</AvatarFallback>
+              <AvatarFallback className='font-semibold text-sm truncate max-w-[15px]'>{otherParticipant?.username}</AvatarFallback>
             </Avatar>
-            {otherParticipant.name}
-            <span className={cn(
-              'w-2 h-2 rounded-full ml-auto',
-              otherParticipant.status === 'online' ? 'bg-green-500' :
-              otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
-            )} />
+
+            <div className='flex flex-col items-start'>
+
+            <div className="flex items-center">
+              <p className="font-semibold text-sm truncate max-w-[140px]">
+                {otherParticipant?.username}
+              </p>
+            </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">{"lastseens"}</p>
+              </div>
+
+            </div>
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full ml-auto',
+                otherParticipant.status === 'online' ? 'bg-green-500' :
+                  otherParticipant.status === 'away' ? 'bg-yellow-500' : 'bg-gray-300'
+              )}
+            />
           </Button>
         );
+
       })}
     </div>
   );
@@ -174,14 +212,31 @@ function DirectMessagesList({ conversations, selectedId, onSelect }: { conversat
 
 function UserProfile({ user }: { user: User }) {
   return (
-    <div className="flex items-center">
-      <Avatar className="w-8 h-8 mr-2">
-        <AvatarImage src={user.avatar} />
-        <AvatarFallback>{user.name[0]}</AvatarFallback>
+    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
+      <Avatar className="w-10 h-10">
+        <AvatarImage src={user?.avatar} />
+        <AvatarFallback className="text-sm">
+          {user?.username?.charAt(0).toUpperCase()}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-1">
-        <p className="text-sm font-medium">{user.name}</p>
-        <p className="text-xs text-muted-foreground">{user.status}</p>
+        <p className="text-sm font-medium text-foreground">{user?.username}</p>
+        <p className="text-xs text-muted-foreground capitalize">{user?.status || 'Online'}</p>
+      </div>
+    </div>
+  );
+}
+
+function UserProfileSkeliton() {
+  return (
+    <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted animate-pulse">
+      {/* Avatar Skeleton */}
+      <div className="w-10 h-10 bg-muted rounded-full" />
+
+      {/* Text Skeletons */}
+      <div className="flex-1 space-y-2">
+        <div className="w-2/3 h-4 bg-muted rounded-md" />
+        <div className="w-1/3 h-3 bg-muted rounded-md" />
       </div>
     </div>
   );
