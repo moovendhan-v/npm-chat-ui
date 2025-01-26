@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
   // baseURL: import.meta.env.VITE_API_BASE_URL,
-  baseURL: "http://localhost:8085",
+  baseURL: "http://54.198.78.129:8085", // TODO: Handle this dynamically from the json or env file
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,8 @@ interface ChatWindowProps {
 
 export function ChatWindow({ channelId, conversationId }: ChatWindowProps) {
   const [message, setMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  // const [isTyping, setIsTyping] = useState(false);
+  // const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { channels, conversations, currentUser, addMessage } = useChatStore();
   const socketClient = SocketClient.getInstance();
 
